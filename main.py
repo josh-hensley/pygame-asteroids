@@ -79,11 +79,11 @@ class Player:
             missle = Missle(pygame.Vector2(0, -8).rotate(self.angle) + self.center, missle_velocity)
             self.missles.append(missle)
 class Asteroid:
-    def __init__(self):
-        self.center = pygame.Vector2(random.randrange(0, SCREEN_WIDTH), random.randrange(0, SCREEN_HEIGHT))
-        self.scale = 10
+    def __init__(self, center, scale=10, rotation=random.randrange(-10, 10)):
+        self.center = center
+        self.scale = scale
         self.angle = 0
-        self.rotation = random.randrange(-10, 10)
+        self.rotation = rotation
         self.dx = random.randrange(-10,10)
         self.dy = random.randrange(-10,10)
         self.points = [
@@ -147,8 +147,7 @@ class Missle:
     def draw(self):
         self.rect = pygame.Rect(pygame.Vector2(-1,-1) + self.center, (2, 2))
         pygame.draw.rect(SCREEN, WHITE, self.rect)
-    def collide(self, asteroids):
-        pass
+
 
 def draw(p1, asteroids):
     SCREEN.fill(BLACK)
@@ -182,15 +181,23 @@ def move(p1, asteroids):
 def collide(p1, asteroids):
     p1.collide(asteroids)
     for missle in p1.missles:
-        missle.collide(asteroids)
-
+        for asteroid in asteroids:
+            if missle.rect.colliderect(asteroid.rect):
+                p1.missles.remove(missle)
+                if asteroid.scale == 10:
+                    for i in range(3):
+                        asteroids.append(Asteroid(pygame.Vector2(random.randrange(-100, 100), random.randrange(-100, 100)) + asteroid.center, 5, asteroid.rotation*2))
+                if asteroid.scale == 5:
+                    for i in range(3):
+                        asteroids.append(Asteroid(pygame.Vector2(random.randrange(-100, 100), random.randrange(-100, 100)) + asteroid.center, 1, asteroid.rotation*2))
+                asteroids.remove(asteroid)
 def main():
     running = True
     clock = pygame.time.Clock()
     p1 = Player()
     asteroids = []
     for i in range(6):
-        asteroids.append(Asteroid())
+        asteroids.append(Asteroid(pygame.Vector2(random.randrange(0, SCREEN_WIDTH), random.randrange(0, SCREEN_HEIGHT))))
     while running:
         clock.tick(FPS)
         for event in pygame.event.get():
