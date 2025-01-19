@@ -1,4 +1,6 @@
 import pygame
+import Classes.Player as Player
+import Classes.Asteroid as Asteroid
 import random
 pygame.init()
 
