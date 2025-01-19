@@ -148,7 +148,6 @@ class Missle:
         self.rect = pygame.Rect(pygame.Vector2(-1,-1) + self.center, (2, 2))
         pygame.draw.rect(SCREEN, WHITE, self.rect)
 
-
 def draw(p1, asteroids):
     SCREEN.fill(BLACK)
     p1.draw()
@@ -180,8 +179,8 @@ def move(p1, asteroids):
 
 def collide(p1, asteroids):
     p1.collide(asteroids)
-    for missle in p1.missles:
-        for asteroid in asteroids:
+    for asteroid in asteroids:
+        for missle in p1.missles:
             if missle.rect.colliderect(asteroid.rect):
                 p1.missles.remove(missle)
                 if asteroid.scale == 10:
@@ -190,12 +189,12 @@ def collide(p1, asteroids):
                 if asteroid.scale == 5:
                     for i in range(3):
                         asteroids.append(Asteroid(pygame.Vector2(random.randrange(-100, 100), random.randrange(-100, 100)) + asteroid.center, 1, asteroid.rotation*2))
-                asteroids.remove(asteroid)
+
 def main():
     running = True
     clock = pygame.time.Clock()
     p1 = Player()
-    asteroids = []
+    asteroids = [] 
     for i in range(6):
         asteroids.append(Asteroid(pygame.Vector2(random.randrange(0, SCREEN_WIDTH), random.randrange(0, SCREEN_HEIGHT))))
     while running:
