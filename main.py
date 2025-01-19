@@ -189,6 +189,7 @@ def collide(p1, asteroids):
                 if asteroid.scale == 5:
                     for i in range(3):
                         asteroids.append(Asteroid(pygame.Vector2(random.randrange(-100, 100), random.randrange(-100, 100)) + asteroid.center, 1, asteroid.rotation*2))
+                asteroids.remove(asteroid)
 
 def main():
     running = True
