@@ -102,6 +102,7 @@ class Asteroid:
             pygame.Vector2(-1,-4).rotate(self.angle) * self.scale + self.center,
         ]
         self.rect = pygame.draw.polygon(SCREEN, WHITE, self.points, 1)
+        self.exploding = False
         
     def update(self):
         self.points = [
@@ -155,6 +156,8 @@ def draw(p1, asteroids):
         asteroid.draw()
     for missle in p1.missles:
         missle.draw()
+    for splosion in splosions:
+        splosion.draw()
     pygame.display.update()
 
 def move(p1, asteroids):
@@ -181,8 +184,12 @@ def collide(p1, asteroids):
     p1.collide(asteroids)
     for asteroid in asteroids:
         for missle in p1.missles:
+    for asteroid in asteroids:
+        for missle in p1.missles:
             if missle.rect.colliderect(asteroid.rect):
                 p1.missles.remove(missle)
+                asteroid.exploding = True
+                pygame.event.post(EXPLODE_ASTEROID_EVENT)
                 if asteroid.scale == 10:
                     for i in range(3):
                         asteroids.append(Asteroid(pygame.Vector2(random.randrange(-100, 100), random.randrange(-100, 100)) + asteroid.center, 5, asteroid.rotation*2))
@@ -205,9 +212,14 @@ def main():
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_RIGHT:
                 p1.fire()
+            if event == EXPLODE_ASTEROID_EVENT:
+                for asteroid in asteroids:
+                    if asteroid.exploding:
+                        splosions.append(Splosion(asteroid.center))
+                        asteroids.remove(asteroid)
         move(p1, asteroids)
         collide(p1, asteroids)
-        draw(p1, asteroids)
+        draw(p1, asteroids, splosions)
 
 if __name__ == "__main__":
     main()
