@@ -44,11 +44,15 @@ class Player:
             pygame.Vector2(2, 8).rotate(self.angle) + self.center,
             pygame.Vector2(0, 12).rotate(self.angle) + self.center
         ]
+        self.exploding = False
     def draw(self):
         self.update()
-        self.rect = pygame.draw.polygon(SCREEN, WHITE, self.points, 1)
-        if self.thrusting:
-            pygame.draw.polygon(SCREEN, WHITE, self.flame_points, 1)
+        if self.exploding:
+            pygame.draw.circle(SCREEN, WHITE, self.center, self.rect.width)
+        else:
+            self.rect = pygame.draw.polygon(SCREEN, WHITE, self.points, 1)
+            if self.thrusting:
+                pygame.draw.polygon(SCREEN, WHITE, self.flame_points, 1)
     def thrust(self):
         self.velocity = pygame.Vector2(0,-1).rotate(self.angle)
         self.dy = self.dy + .1 * self.velocity.y if self.dy <= MAX_SPEED else MAX_SPEED * self.velocity.y
@@ -72,13 +76,14 @@ class Player:
     def collide(self, colliders):
         for collider in colliders:
             if self.rect.colliderect(collider.rect):
-                print('colliding with ', collider)
+                self.exploding = True
     def fire(self):
         if len(self.missles) <= 4:
             missle_velocity = pygame.Vector2(0,-1).rotate(self.angle)
             missle = Missle(pygame.Vector2(0, -8).rotate(self.angle) + self.center, missle_velocity)
             self.missles.append(missle)
-class Asteroid:
+
+    class Asteroid:
     def __init__(self, center, scale=10, rotation=random.randrange(-10, 10)):
         self.center = center
         self.scale = scale
@@ -133,6 +138,7 @@ class Asteroid:
             self.center.x = 0
         if self.center.x < 0:
             self.center.x = SCREEN_WIDTH
+
 class Missle:
     def __init__(self, spawn, velocity):
         self.center = spawn
