@@ -1,6 +1,4 @@
 import pygame
-import Classes.Player as Player
-import Classes.Asteroid as Asteroid
 import random
 pygame.init()
 
@@ -85,7 +83,7 @@ class Player:
             missle = Missle(pygame.Vector2(0, -8).rotate(self.angle) + self.center, missle_velocity)
             self.missles.append(missle)
 
-    class Asteroid:
+class Asteroid:
     def __init__(self, center, scale=10, rotation=random.randrange(-10, 10)):
         self.center = center
         self.scale = scale
@@ -105,9 +103,13 @@ class Player:
             pygame.Vector2(0,3).rotate(self.angle) * self.scale + self.center,
             pygame.Vector2(-2,3).rotate(self.angle) * self.scale + self.center,
             pygame.Vector2(-4,1).rotate(self.angle) * self.scale + self.center,
-            pygame.Vector2(-4,-2).rotate(self.angle) * self.scale + self.center,
+            pygame.Vector2(-4,-2).rotate(self.angle) * self.scale + self.center, 
             pygame.Vector2(-1,-4).rotate(self.angle) * self.scale + self.center,
         ]
+        accum = pygame.Vector2(0, 0)
+        for point in self.points:
+            accum += point
+        self.center = accum / len(self.points)
         self.rect = pygame.draw.polygon(SCREEN, WHITE, self.points, 1)
         
     def update(self):
@@ -156,16 +158,24 @@ class Missle:
         self.rect = pygame.Rect(pygame.Vector2(-1,-1) + self.center, (2, 2))
         pygame.draw.rect(SCREEN, WHITE, self.rect)
 
-def draw(p1, asteroids):
-    SCREEN.fill(BLACK)
-    p1.draw()
-    for asteroid in asteroids:
-        asteroid.draw()
-    for missle in p1.missles:
-        missle.draw()
-    pygame.display.update()
+class Particle(pygame.sprite.Sprite):
+    def __init__(self, groups, pos, color, direction, speed):
+        super().__init__(groups)
+        self.pos = pos
+        self.color = color
+        self.direction = direction
+        self.speed = speed
+        self.create_surf()
+    def create_surf(self):
+        self.image = pygame.Surface((2,2)).convert_alpha()
+        self.image.set_colorkey('black')
+        pygame.draw.circle(surface=self.image, color=self.color, center=(2,2), radius=2)
+        self.rect = self.image.get_rect()
+    def update(self, dt):
+        self.pos += self.direction * self.speed * dt
+        self.rect.center = self.pos
 
-def move(p1, asteroids):
+def move(p1, asteroids, dt):
     mouse_move = pygame.mouse.get_rel()
     if mouse_move[0] > 0:
         p1.angle += p1.rotation / FPS
@@ -184,6 +194,7 @@ def move(p1, asteroids):
         missle.move()
         if missle.cycle == 0:
             p1.missles.remove(missle)
+    particles.update(dt)
 
 def collide(p1, asteroids):
     p1.collide(asteroids)
@@ -197,25 +208,49 @@ def collide(p1, asteroids):
                 if asteroid.scale == 5:
                     for i in range(3):
                         asteroids.append(Asteroid(pygame.Vector2(random.randrange(-100, 100), random.randrange(-100, 100)) + asteroid.center, 1, asteroid.rotation*2))
+                center = [asteroid.center.x, asteroid.center.y]
+                spawn_particles(200, center)
                 asteroids.remove(asteroid)
+def spawn_particles(n, center):
+    for _ in range(n):
+        pos = center
+        color = WHITE
+        direction = pygame.math.Vector2(random.uniform(-1, 1), random.uniform(-1, 1))
+        direction.normalize()
+        speed = 1
+        Particle(particles, pos, color, direction, speed)
+
+def draw(p1, asteroids):
+    SCREEN.fill(BLACK)
+    p1.draw()
+    for asteroid in asteroids:
+        asteroid.draw()
+    for missle in p1.missles:
+        missle.draw()
+
+particles = pygame.sprite.Group()
 
 def main():
     running = True
     clock = pygame.time.Clock()
     p1 = Player()
-    asteroids = [] 
+    asteroids = []
     for i in range(6):
         asteroids.append(Asteroid(pygame.Vector2(random.randrange(0, SCREEN_WIDTH), random.randrange(0, SCREEN_HEIGHT))))
     while running:
-        clock.tick(FPS)
+        dt = clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == pygame.BUTTON_RIGHT:
                 p1.fire()
-        move(p1, asteroids)
+        move(p1, asteroids, dt)
         collide(p1, asteroids)
         draw(p1, asteroids)
+        particles.draw(SCREEN)
+        pygame.display.update()
+
+
 
 if __name__ == "__main__":
     main()
